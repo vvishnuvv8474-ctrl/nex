@@ -66,7 +66,7 @@ router.post("/launch", async (req, res) => {
 
     // User requested to use this specific format for launching:
     // https://ourlocalhost/games/?providerCode=SPB&gameCode=aviator&currency=LKR
-    const launchURL = `https://ourlocalhost/games/?providerCode=${PROVIDER_CODE}&gameCode=${selectedGame}&currency=${CURRENCY}&userId=${encodeURIComponent(userId)}`;
+    const launchURL = `https://nex-production-aae2.up.railway.app/games/?providerCode=${PROVIDER_CODE}&gameCode=${selectedGame}&currency=${CURRENCY}&userId=${encodeURIComponent(userId)}`;
 
     console.log(`[AUTH] Gateway launchURL generated for userId=${userId}`);
     return res.json({ success: true, launchURL });
