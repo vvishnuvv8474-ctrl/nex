@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Environment secrets — NEVER commit
+.env
+
+# SQLite database file (runtime data)
+casino.db
+casino.db-shm
+casino.db-wal
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="WCO Casino — Spribe Lobby integration demo with live wallet management"
+    />
+    <title>WCO Casino — Spribe Lobby</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- ═══════════════════════════════════════════════════════════════════
+         LOADING SCREEN
+    ════════════════════════════════════════════════════════════════════ -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-logo">
+        <div class="loading-icon">🎰</div>
+        <span>WCO Casino</span>
+      </div>
+      <div class="loading-bar-wrap">
+        <div class="loading-bar"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         LOGIN MODAL
+    ════════════════════════════════════════════════════════════════════ -->
+    <div id="login-modal" class="modal-overlay hidden">
+      <div class="modal-card" id="login-card">
+        <div class="modal-badge">🎲</div>
+        <h2 class="modal-title">Welcome Back</h2>
+        <p class="modal-sub">Enter your User ID to access the lobby</p>
+
+        <div class="input-group">
+          <label for="user-id-input">User ID</label>
+          <input
+            type="text"
+            id="user-id-input"
+            placeholder="e.g. demo_user"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <span class="input-hint">Use <strong>demo_user</strong> for the pre-funded demo account</span>
+        </div>
+
+        <button id="login-btn" class="btn btn-primary btn-full" onclick="handleLogin()">
+          <span class="btn-icon">→</span> Enter Casino
+        </button>
+
+        <p class="modal-footer-note">
+          No real money. This is a sandbox integration demo.
+        </p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         DEPOSIT MODAL
+    ════════════════════════════════════════════════════════════════════ -->
+    <div id="deposit-modal" class="modal-overlay hidden">
+      <div class="modal-card wallet-modal-card">
+        <button class="modal-close-btn" onclick="closeModal('deposit-modal')">✕</button>
+        <div class="modal-badge">💳</div>
+        <h2 class="modal-title">Deposit Funds</h2>
+        <p class="modal-sub">Enter your payment details to request a deposit</p>
+
+        <div class="input-group">
+          <label for="deposit-amount">Amount (LKR)</label>
+          <input
+            type="number"
+            id="deposit-amount"
+            placeholder="e.g. 500"
+            min="1"
+            step="1"
+          />
+        </div>
+
+        <div class="input-group">
+          <label for="deposit-utr">UTR Number (12 digits)</label>
+          <input
+            type="text"
+            id="deposit-utr"
+            placeholder="e.g. 123456789012"
+            maxlength="12"
+            inputmode="numeric"
+            autocomplete="off"
+          />
+          <span class="input-hint">12-digit Unique Transaction Reference from your bank</span>
+        </div>
+
+        <button class="btn btn-deposit btn-full" id="deposit-submit-btn" onclick="submitDeposit()">
+          <span class="btn-icon">💰</span> Submit Deposit Request
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         WITHDRAWAL MODAL
+    ════════════════════════════════════════════════════════════════════ -->
+    <div id="withdraw-modal" class="modal-overlay hidden">
+      <div class="modal-card wallet-modal-card">
+        <button class="modal-close-btn" onclick="closeModal('withdraw-modal')">✕</button>
+        <div class="modal-badge">🏦</div>
+        <h2 class="modal-title">Withdraw Funds</h2>
+        <p class="modal-sub">Enter your UPI details to request a withdrawal</p>
+
+        <div class="input-group">
+          <label for="withdraw-amount">Amount (LKR)</label>
+          <input
+            type="number"
+            id="withdraw-amount"
+            placeholder="e.g. 200"
+            min="1"
+            step="1"
+          />
+        </div>
+
+        <div class="input-group">
+          <label for="withdraw-upi">UPI ID</label>
+          <input
+            type="text"
+            id="withdraw-upi"
+            placeholder="e.g. name@upi"
+            autocomplete="off"
+          />
+          <span class="input-hint">Your registered UPI ID (e.g. phonepe / gpay)</span>
+        </div>
+
+        <button class="btn btn-withdraw btn-full" id="withdraw-submit-btn" onclick="submitWithdraw()">
+          <span class="btn-icon">🏧</span> Submit Withdrawal Request
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         GAME IFRAME OVERLAY
+    ════════════════════════════════════════════════════════════════════ -->
+    <div id="game-overlay" class="game-overlay hidden">
+      <div class="game-topbar">
+        <div class="game-topbar-left">
+          <div class="casino-logo-sm">🎰 WCO</div>
+          <div class="game-badge">Spribe Lobby</div>
+        </div>
+        <div class="game-topbar-right">
+          <div class="topbar-balance">
+            <span class="tb-label">Balance</span>
+            <span id="topbar-balance-val" class="tb-value">LKR 0.00</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="closeGame()" id="close-game-btn">
+            ✕ Exit
+          </button>
+        </div>
+      </div>
+      <iframe
+        id="game-iframe"
+        src=""
+        allow="fullscreen; autoplay;"
+        allowfullscreen
+        frameborder="0"
+        title="Spribe Game Lobby"
+      ></iframe>
+      <div id="iframe-loader" class="iframe-loader">
+        <div class="spinner"></div>
+        <p>Loading Aviator…</p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         MAIN DASHBOARD
+    ════════════════════════════════════════════════════════════════════ -->
+    <div id="main-app" class="main-app hidden">
+
+      <!-- ── Header ─────────────────────────────────────────────────── -->
+      <header class="site-header">
+        <div class="header-inner">
+          <div class="header-logo">
+            <span class="logo-icon">🎰</span>
+            <span class="logo-text">WCO<span class="logo-accent">Casino</span></span>
+          </div>
+          <nav class="header-nav">
+            <span class="nav-item active" id="nav-lobby" onclick="switchTab('lobby')">Lobby</span>
+            <span class="nav-item" id="nav-history" onclick="switchTab('history')">History</span>
+            <span class="nav-item" id="nav-admin" onclick="switchTab('admin')">⚙ Admin</span>
+          </nav>
+          <div class="header-actions">
+            <div class="header-user" id="header-user">
+              <div class="avatar" id="user-avatar">?</div>
+              <span id="header-username">Guest</span>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="handleLogout()">Logout</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- ── Toast Notification ─────────────────────────────────────── -->
+      <div id="toast-container" class="toast-container"></div>
+
+      <!-- ════════════════════════════════════════════════════════════
+           TAB: LOBBY
+      ════════════════════════════════════════════════════════════════ -->
+      <div id="tab-lobby">
+        <!-- ── Hero / Balance Section ─────────────────────────────────── -->
+        <section class="hero-section">
+          <div class="hero-bg-orbs">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+          </div>
+          <div class="hero-inner">
+            <div class="balance-card glass">
+              <div class="balance-top">
+                <div class="balance-label">
+                  <span class="bc-dot"></span> Live Balance
+                </div>
+                <button
+                  class="btn btn-ghost btn-xs"
+                  id="refresh-balance-btn"
+                  onclick="refreshBalance()"
+                  title="Refresh balance"
+                >
+                  ↻
+                </button>
+              </div>
+              <div class="balance-amount" id="balance-display">LKR 0.00</div>
+              <div class="balance-currency">Sri Lankan Rupee · LKR</div>
+
+              <!-- Deposit / Withdraw actions -->
+              <div class="wallet-actions">
+                <button class="btn btn-deposit btn-sm" id="open-deposit-btn" onclick="openModal('deposit-modal')">
+                  <span>↑</span> Deposit
+                </button>
+                <button class="btn btn-withdraw btn-sm" id="open-withdraw-btn" onclick="openModal('withdraw-modal')">
+                  <span>↓</span> Withdraw
+                </button>
+              </div>
+
+              <!-- Dev test buttons (keep for sandbox) -->
+              <div class="balance-actions" style="margin-top:10px;">
+                <button class="btn btn-outline btn-sm" onclick="testDebit()">
+                  − Test Bet LKR 10
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="testCredit()">
+                  + Test Win LKR 25
+                </button>
+              </div>
+            </div>
+
+            <div class="hero-cta">
+              <h1 class="hero-title">
+                Welcome to<br /><span class="gradient-text">Spribe Lobby</span>
+              </h1>
+              <p class="hero-sub">
+                Instant game access · Live balance sync · Secure wallet
+              </p>
+              <button
+                class="btn btn-primary btn-lg glow"
+                id="open-lobby-btn"
+                onclick="launchAviator()"
+              >
+                <span class="btn-icon">▶</span> Launch Aviator
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════
+           TAB: TRANSACTION HISTORY
+      ════════════════════════════════════════════════════════════════ -->
+      <div id="tab-history" class="hidden">
+        <section class="content-section">
+          <div class="section-header">
+            <h2 class="section-title">Transaction History</h2>
+            <span id="tx-count-badge" class="badge">0 records</span>
+          </div>
+          <div id="tx-list" class="tx-list">
+            <div class="tx-empty">No transactions yet. Play a game to get started!</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════
+           TAB: ADMIN PANEL
+      ════════════════════════════════════════════════════════════════ -->
+      <div id="tab-admin" class="hidden">
+        <section class="content-section admin-section">
+          <div class="section-header">
+            <h2 class="section-title">⚙ Admin Panel</h2>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span id="admin-pending-badge" class="badge badge-warn">0 pending</span>
+              <button class="btn btn-ghost btn-xs" onclick="loadAdminRequests()">↻ Refresh</button>
+            </div>
+          </div>
+
+          <!-- Filter Tabs -->
+          <div class="admin-filter-tabs">
+            <button class="admin-tab active" id="atab-all"      onclick="filterAdmin('all')">All</button>
+            <button class="admin-tab" id="atab-pending"  onclick="filterAdmin('pending')">Pending</button>
+            <button class="admin-tab" id="atab-deposit"  onclick="filterAdmin('deposit')">Deposits</button>
+            <button class="admin-tab" id="atab-withdraw" onclick="filterAdmin('withdraw')">Withdrawals</button>
+          </div>
+
+          <div id="admin-req-list" class="admin-req-list">
+            <div class="tx-empty">Loading requests…</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ── Footer ─────────────────────────────────────────────────── -->
+      <footer class="site-footer">
+        <p>WCO Casino Integration Demo · Sandbox Environment · Not real money</p>
+        <p class="footer-tech">Built with Node.js · Express · Vanilla JS</p>
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

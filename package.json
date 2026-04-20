@@ -1,0 +1,12 @@
+{
+  "name": "wco-casino",
+  "version": "1.0.0",
+  "description": "WCO Casino Backend",
+  "scripts": {
+    "start": "node backend/server.js",
+    "install": "cd backend && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
