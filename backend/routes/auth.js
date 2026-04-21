@@ -44,39 +44,52 @@ router.post("/launch", async (req, res) => {
     });
   }
 
-  // ── Build the WCO auth payload ─────────────────────────────────────────
+  // ── Build the Nexx API payload ─────────────────────────────────────────
   const payload = {
-    partnerKey: PARTNER_KEY,      // secret — never exposed to browser
-    providerCode: PROVIDER_CODE,
-    gameCode: selectedGame,       // requested game
-    currency: CURRENCY,
+    partnerKey: PARTNER_KEY,
+    game: {
+      gameCode: selectedGame,
+      providerCode: PROVIDER_CODE,
+      platform: "mobile",
+    },
+    timestamp: Math.floor(Date.now() / 1000).toString(),
     user: {
       id: userId,
-      username: username || userId,
-      firstName: username || "Player",
-      lastName: "",
+      currency: CURRENCY,
+      displayName: username || userId,
+      backUrl: "https://google.com/",
     },
-    // Add any extra optional WCO fields here (language, returnUrl, etc.)
-    lang: "en",
-    timestamp: Date.now().toString(),
   };
 
   try {
-    console.log(`[AUTH] Launching game for userId=${userId} provider=${PROVIDER_CODE}`);
+    console.log(`[AUTH] Launching via Nexx API for userId=${userId}`);
 
-    // User requested to use this specific format for launching:
-    // https://ourlocalhost/games/?providerCode=SPB&gameCode=aviator&currency=LKR
-    const launchURL = `https://localhost:3001/games/?providerCode=${PROVIDER_CODE}&gameCode=${selectedGame}&currency=${CURRENCY}&userId=${encodeURIComponent(userId)}`;
+    const response = await axios.post("https://apis.nexxapi.tech/api/auth.php", payload, {
+      headers: { "Content-Type": "application/json" },
+      timeout: 15_000,
+    });
 
-    console.log(`[AUTH] Gateway launchURL generated for userId=${userId}`);
-    return res.json({ success: true, launchURL });
+    const data = response.data;
+
+    // The API usually returns { success: true, launchURL: "..." } or similar
+    if (!data || !data.launchURL) {
+      console.error("[AUTH] Nexx API error response:", data);
+      return res.status(502).json({
+        success: false,
+        error: "Nexx API did not return a launchURL",
+        apiResponse: data,
+      });
+    }
+
+    console.log(`[AUTH] launchURL received for userId=${userId}`);
+    return res.json({ success: true, launchURL: data.launchURL });
   } catch (err) {
     const status = err.response?.status || 500;
     const detail = err.response?.data || err.message;
-    console.error(`[AUTH] WCO API error (${status}):`, detail);
+    console.error(`[AUTH] Nexx API error (${status}):`, detail);
     return res.status(502).json({
       success: false,
-      error: "Failed to authenticate with WCO",
+      error: "Failed to authenticate with Nexx API",
       detail,
     });
   }
