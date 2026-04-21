@@ -65,7 +65,10 @@ router.post("/launch", async (req, res) => {
     console.log(`[AUTH] Launching via Nexx API for userId=${userId}`);
 
     const response = await axios.post("https://apis.nexxapi.tech/api/auth.php", payload, {
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Cookie": "user_session=tt4qs18shll6kbn3jlr5ivsbun"
+      },
       timeout: 15_000,
     });
 
